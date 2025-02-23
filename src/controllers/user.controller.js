@@ -11,7 +11,7 @@ export const registerUser = asyncHandler( async(req,res)=>{
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username },{ email }]
     })
 
@@ -20,7 +20,11 @@ export const registerUser = asyncHandler( async(req,res)=>{
     }
     
     const avatarFileLocalPath = req.files?.avatar[0]?.path;
-    const coverImgFileLocalPath = req.files?.coverImage[0]?.path;
+    let coverImgFileLocalPath;
+    
+    if(req.files?.coverImage){
+        coverImgFileLocalPath = req.files?.coverImage[0]?.path;
+    }
 
     if(!avatarFileLocalPath){
         throw new ApiError(400, "Avatar field is required")
@@ -33,7 +37,7 @@ export const registerUser = asyncHandler( async(req,res)=>{
         throw new ApiError(400, "Avatar file is required")
     }
 
-    const user = User.create({
+    const user = await User.create({
         fullName,
         avatar:avatar.url,
         coverImage:coverImage?.url || "",
@@ -42,7 +46,9 @@ export const registerUser = asyncHandler( async(req,res)=>{
         username:username.toLowerCase(),
     })
 
-    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    )
 
     if(!createdUser){
         throw new ApiError(500, "Something went wrong while registring user")
