@@ -7,16 +7,19 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 export const registerUser = asyncHandler( async(req,res)=>{
     const { username, email, fullName, password } = req.body;
 
-    if([username, email, fullName, password].some(field=>field?.trim() === "")){
+    if(!username?.trim() || !email?.trim() || !fullName?.trim() || !password?.trim()){
         throw new ApiError(400, "All fields are required")
     }
 
-    const existedUser = await User.findOne({
-        $or: [{ username },{ email }]
-    })
+    const existedUsername = await User.findOne({username})
+    const existedEmail = await User.findOne({email})
 
-    if(existedUser){
-        throw new ApiError(409, "username or email already exists")
+    if(existedUsername){
+        throw new ApiError(409, "username already exists")
+    }
+
+    if(existedEmail){
+        throw new ApiError(409, "email already exists")
     }
     
     const avatarFileLocalPath = req.files?.avatar[0]?.path;
@@ -58,4 +61,28 @@ export const registerUser = asyncHandler( async(req,res)=>{
         new ApiResponse(200, createdUser, "User registered successfully")
     )
 
+})
+
+export const loginUser = asyncHandler( async(req,res) => {
+    const { email, password } = req.body
+
+    if(!email?.trim() || !password?.trim()){
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findOne({email})
+
+    if(!user){
+        throw new ApiError(400, "Email is not available, Register first")
+    }
+
+    const isPasswordMatch = await user.isPasswordCorrect(password)
+
+    if(!isPasswordMatch){
+        throw new ApiError(409, "Incorrect password")
+    }
+
+    return res.status(201).json(
+        new ApiResponse(200, user, "User login successfully")
+    )
 })
