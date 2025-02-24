@@ -17,4 +17,9 @@ router.route('/register').post(
     registerUser
 )
 
+router.route('/login').post(
+    upload.none(),
+    loginUser
+)
+
 export default router
