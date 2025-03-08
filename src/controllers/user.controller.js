@@ -21,7 +21,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     }
 }
 
-export const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
     const { username, email, fullName, password } = req.body;
 
     if (!username?.trim() || !email?.trim() || !fullName?.trim() || !password?.trim()) {
@@ -80,7 +80,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
 })
 
-export const loginUser = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body
 
     if (!email?.trim() || !password?.trim()) {
@@ -123,7 +123,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         )
 })
 
-export const logoutUser = asyncHandler(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
@@ -150,7 +150,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
         )
 })
 
-export const refreshAccessToken = asyncHandler(async (req, res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
     if (!incomingRefreshToken) {
@@ -162,7 +162,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
             incomingRefreshToken,
             process.env.REFRESH_TOKEN_SECRET
         )
-        
+
         const user = await User.findById(decodedToken?._id)
 
         if (!user) {
@@ -192,11 +192,11 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 })
 
-export const changeCurrentPassword = asyncHandler(async (req, res) => {
+const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
-    
-    if(!oldPassword || !newPassword){
-        throw new ApiError(400,"All fields are required")
+
+    if (!oldPassword || !newPassword) {
+        throw new ApiError(400, "All fields are required")
     }
 
     const user = await User.findById(req.user?._id)
@@ -214,7 +214,7 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, {}, "Password changed successfullly"))
 })
 
-export const getCurrentUser = asyncHandler(async (req, res) => {
+const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
@@ -222,7 +222,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
         )
 })
 
-export const updateAccountDetails = asyncHandler(async (req, res) => {
+const updateAccountDetails = asyncHandler(async (req, res) => {
     const { email, fullName } = req.body
 
     if (!email || !fullName) {
@@ -241,7 +241,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(           
+            new ApiResponse(
                 200,
                 user,
                 "Details updated successfully"
@@ -249,7 +249,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
         )
 })
 
-export const updateUserAvatar = asyncHandler(async (req, res) => {
+const updateUserAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path
 
     if (!avatarLocalPath) {
@@ -281,9 +281,9 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
         )
 })
 
-export const updateUserCoverImage = asyncHandler(async (req, res) => {
+const updateUserCoverImage = asyncHandler(async (req, res) => {
     const coverImagePath = req.file?.path
-    
+
     if (!coverImagePath) {
         throw new ApiError(401, "Cover image is missing")
     }
@@ -315,7 +315,7 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
         )
 })
 
-export const getUserChannelProfile = asyncHandler(async (req, res) => {
+const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { username } = req.params;
 
     if (!username?.trim()) {
@@ -386,38 +386,38 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
         )
 })
 
-export const getWatchHistory = asyncHandler(async (req, res) => {
+const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
-            $match:{
+            $match: {
                 _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
-            $lookup:{
-                from:"videos",
-                localField:"watchHistory",
-                foreignField:"_id",
-                as:"watchHistory",
-                pipeline:[
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
                     {
-                        $lookup:{
-                            from:"users",
-                            localField:"owner",
-                            foreignField:"_id",
-                            as:"owner",
-                            pipeline:[
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
                                 {
-                                    $project:{
-                                        fullName:1,
-                                        username:1,
-                                        avatar:1
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
                                     }
                                 },
                                 {
-                                    $addFields:{
-                                        owner:{
-                                            $first:"$owner"
+                                    $addFields: {
+                                        owner: {
+                                            $first: "$owner"
                                         }
                                     }
                                 }
@@ -430,8 +430,23 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
     ])
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully")
+        )
 })
+
+
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory
+}
