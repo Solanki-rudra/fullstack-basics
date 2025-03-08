@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -126,8 +127,8 @@ export const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -159,9 +160,9 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     try {
         const decodedToken = jwt.verify(
             incomingRefreshToken,
-            process.env.REFRESH_TOKEN_SERCRET
+            process.env.REFRESH_TOKEN_SECRET
         )
-
+        
         const user = await User.findById(decodedToken?._id)
 
         if (!user) {
@@ -193,6 +194,10 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
 export const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
+    
+    if(!oldPassword || !newPassword){
+        throw new ApiError(400,"All fields are required")
+    }
 
     const user = await User.findById(req.user?._id)
 
@@ -212,7 +217,9 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
 export const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(200, req.user, "Current user fetched successfully")
+        .json(
+            new ApiResponse(200, req.user, "Current user fetched successfully")
+        )
 })
 
 export const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -234,9 +241,11 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            200,
-            user,
-            "Details updated successfully"
+            new ApiResponse(           
+                200,
+                user,
+                "Details updated successfully"
+            )
         )
 })
 
@@ -264,15 +273,17 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            200,
-            user,
-            "Avatar updated successfully"
+            new ApiResponse(
+                200,
+                user,
+                "Avatar updated successfully"
+            )
         )
 })
 
 export const updateUserCoverImage = asyncHandler(async (req, res) => {
     const coverImagePath = req.file?.path
-
+    
     if (!coverImagePath) {
         throw new ApiError(401, "Cover image is missing")
     }
@@ -296,9 +307,11 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            200,
-            user,
-            "Cover image uploaded successfully"
+            new ApiResponse(
+                200,
+                user,
+                "Cover image uploaded successfully"
+            )
         )
 })
 
