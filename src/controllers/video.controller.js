@@ -114,7 +114,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
         );
 });
 
-
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
@@ -138,7 +137,6 @@ const getVideoById = asyncHandler(async (req, res) => {
             )
         );
 });
-
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
@@ -181,7 +179,6 @@ const updateVideo = asyncHandler(async (req, res) => {
         );
 });
 
-
 const deleteVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
     const userId = req.user?.id
@@ -206,7 +203,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
             )
         );
 });
-
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
@@ -240,7 +236,6 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
             )
         );
 });
-
 
 export {
     getAllVideos,
