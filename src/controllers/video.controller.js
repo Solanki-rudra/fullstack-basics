@@ -8,19 +8,26 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy="created_at", sortType='desc', userId } = req.query
+    const {
+        page = 1,
+        limit = 10,
+        query,
+        sortBy = "created_at",
+        sortType = 'desc',
+        userId
+    } = req.query
 
     let filter = {}
-    if(query){
+    if (query) {
         filter = {
-            $or:[
-                {title:{$regex:query,options:'i'}},
-                {description:{$regex:query,options:'i'}}
+            $or: [
+                { title: { $regex: query, options: 'i' } },
+                { description: { $regex: query, options: 'i' } }
             ]
         }
     }
 
-    if(userId && isValidObjectId(userId)){
+    if (userId && isValidObjectId(userId)) {
         filter.owner = userId
     }
 
@@ -28,32 +35,32 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
     const videos = await Video.aggregate[
         {
-            $match:filter
+            $match: filter
         },
         {
-            $sort:{[sortBy]:sortType}
+            $sort: { [sortBy]: sortType }
         },
         {
-            $skip:(page-1)*limit
+            $skip: (page - 1) * limit
         },
         {
-            $limit:limit
+            $limit: limit
         }
     ]
 
-    if(videos.length === 0){
+    if (videos.length === 0) {
         throw new ApiError(404, "Videos not found")
     }
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(
-            200,
-            videos,
-            "Videos retrieved successfully"
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                videos,
+                "Videos retrieved successfully"
+            )
         )
-    )
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -162,7 +169,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     video.duration = duration || video.duration;
 
     if (req.files && req.files.thumbnail) {
-        const thumbnailUpload = await uploadOnCloudinary(req.files.thumbnail[0].path);
+        const thumbnailUpload = await uploadOnCloudinary(req.file?.thumbnail[0].path);
         video.thumbnail = thumbnailUpload.url;
     }
 
