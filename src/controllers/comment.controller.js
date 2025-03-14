@@ -15,7 +15,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
     page = parseInt(page)
     limit = parseInt(limit)
 
-    const comments = await Comment.find({ videoId })
+    const comments = await Comment.find({video: videoId })
         .populate("owner", "username email")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -76,7 +76,7 @@ const updateComment = asyncHandler(async (req, res) => {
             throw new ApiError(400, "Invalid comment id")
         }
 
-        const comment = Comment.findById(commentId)
+        const comment = await Comment.findById(commentId)
 
         if (!comment) {
             throw new ApiError(404, "Comment not found")
@@ -86,15 +86,17 @@ const updateComment = asyncHandler(async (req, res) => {
             throw new ApiError(403, "You're not allowed to update comment")
         }
 
-        Comment.content = content
-        await Comment.save()
+        comment.content = content
+        await comment.save()
 
         return res
             .status(200)
             .json(
-                200,
-                comment,
-                "Comment updated successfully"
+                new ApiResponse(
+                    200,
+                    comment,
+                    "Comment updated successfully"
+                )
             )
     } catch (error) {
         throw new ApiError(500, error.message || "Error while updating comment")
