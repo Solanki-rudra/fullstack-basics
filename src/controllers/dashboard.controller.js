@@ -16,7 +16,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const videos = await Video.aggregate([
         {
             $match: {
-                owner: mongoose.Types.ObjectId(channelId)
+                owner: new mongoose.Types.ObjectId(channelId)
             }
         },
         {
@@ -52,7 +52,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
             }
         }
     ]);
-
+console.log(videos)
     if (!videos.length) {
         throw new ApiError(400, "Videos not found for views and count");
     }
@@ -60,13 +60,13 @@ const getChannelStats = asyncHandler(async (req, res) => {
     const subscribers = await Subscription.aggregate([
         {
             $match: {
-                channel: mongoose.Types.ObjectId(channelId)
+                channel: new mongoose.Types.ObjectId(channelId)
             }
         },
         {
             $group: {
                 _id: null,
-                totalSubscribers: 1
+                totalSubscribers: {$sum:1}
             }
         },
         {
@@ -77,9 +77,11 @@ const getChannelStats = asyncHandler(async (req, res) => {
         }
     ]);
 
-    if (!subscribers.length) {
-        throw new ApiError(400, "Subscribers not found for count");
-    }
+    console.log(subscribers)
+
+    // if (!subscribers.length) {
+    //     throw new ApiError(400, "Subscribers not found for count");
+    // }
 
     return res
         .status(200)
@@ -87,10 +89,10 @@ const getChannelStats = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    totalVideos: videos[0].totalVideos,
-                    totalViews: videos[0].totalViews,
-                    totalLikes: videos[0].totalLikes,
-                    totalSubscribers: subscribers[0].totalSubscribers
+                    totalVideos: videos[0]?.totalVideos,
+                    totalViews: videos[0]?.totalViews,
+                    totalLikes: videos[0]?.totalLikes,
+                    totalSubscribers: subscribers[0]?.totalSubscribers || 0
                 },
                 "Channel stats retrieved successfully"
             )
