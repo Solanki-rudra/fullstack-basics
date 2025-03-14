@@ -52,7 +52,7 @@ const getChannelStats = asyncHandler(async (req, res) => {
             }
         }
     ]);
-console.log(videos)
+
     if (!videos.length) {
         throw new ApiError(400, "Videos not found for views and count");
     }
@@ -77,7 +77,6 @@ console.log(videos)
         }
     ]);
 
-    console.log(subscribers)
 
     // if (!subscribers.length) {
     //     throw new ApiError(400, "Subscribers not found for count");
