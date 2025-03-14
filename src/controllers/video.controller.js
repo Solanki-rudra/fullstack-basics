@@ -15,41 +15,31 @@ const getAllVideos = asyncHandler(async (req, res) => {
         sortBy = "created_at",
         sortType = 'desc',
         userId
-    } = req.query
+    } = req.query;
 
-    let filter = {}
+    let filter = {};
     if (query) {
         filter = {
             $or: [
-                { title: { $regex: query, options: 'i' } },
-                { description: { $regex: query, options: 'i' } }
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } }
             ]
-        }
+        };
     }
 
     if (userId && isValidObjectId(userId)) {
-        filter.owner = userId
+        filter.owner = userId;
     }
 
-    sortType = sortType === 'desc' ? -1 : 1
-
-    const videos = await Video.aggregate[
-        {
-            $match: filter
-        },
-        {
-            $sort: { [sortBy]: sortType }
-        },
-        {
-            $skip: (page - 1) * limit
-        },
-        {
-            $limit: limit
-        }
-    ]
+    const videos = await Video.aggregate([
+        { $match: filter },
+        { $sort: { [sortBy]: sortType === 'desc' ? -1 : 1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit, 10) }  // Ensure limit is an integer
+    ]);
 
     if (videos.length === 0) {
-        throw new ApiError(404, "Videos not found")
+        throw new ApiError(404, "Videos not found");
     }
 
     return res
@@ -60,18 +50,18 @@ const getAllVideos = asyncHandler(async (req, res) => {
                 videos,
                 "Videos retrieved successfully"
             )
-        )
-})
+        );
+});
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
-    const { userId } = req.user?.id;
+    const userId = req.user?.id;
 
-    if (!title.trim()) {
+    if (!title?.trim()) {
         throw new ApiError(400, "Title is required")
     }
 
-    if (!description.trim()) {
+    if (!description?.trim()) {
         throw new ApiError(400, "Description is required")
     }
 
@@ -79,8 +69,9 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid user id")
     }
 
-    const videoLocalPath = req.files?.video[0].path
-    const thumbnailLocalPath = req.files?.thumbnail[0].path
+    const videoLocalPath = req.files?.video && req.files?.video[0].path
+
+    const thumbnailLocalPath = req.files?.thumbnail && req.files?.thumbnail[0].path
 
     if (!videoLocalPath) {
         throw new ApiError(400, "Video field is required")
@@ -166,10 +157,9 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     video.title = title || video.title;
     video.description = description || video.description;
-    video.duration = duration || video.duration;
 
-    if (req.files && req.files.thumbnail) {
-        const thumbnailUpload = await uploadOnCloudinary(req.file?.thumbnail[0].path);
+    if (req?.file && req?.file?.path) {
+        const thumbnailUpload = await uploadOnCloudinary(req?.file?.path);
         video.thumbnail = thumbnailUpload.url;
     }
 
