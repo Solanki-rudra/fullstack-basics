@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { ApiError } from "./utils/ApiError.js";
+import { ApiError } from './utils/ApiError.js';
 
 const app = express();
 
@@ -9,26 +9,6 @@ app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
 }))
-
-app.use((err, req, res, next) => {
-    console.error("Error:", err);
-
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json({
-            success: false,
-            message: err.message,
-            errors: err.errors || [],
-        });
-    }
-
-    // Handle other errors
-    return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-        errors: [],
-    });
-});
-
 
 app.use(express.json({ limit: "16kb" }))
 app.use(express.urlencoded({ extended: true, limit: "16kb" }))
@@ -55,5 +35,22 @@ app.use("/api/v1/playlist", playlistRouter)
 app.use("/api/v1/subscription", subscriptionRouter)
 app.use("/api/v1/tweet", tweetRouter)
 app.use("/api/v1/video", videoRouter)
+
+// Global Error Handler (MUST be at the bottom)
+app.use((err, req, res, next) => {
+    console.error("Error:", err);
+    if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+            success: false,
+            message: err.message,
+            errors: err.errors || [],
+        });
+    }
+    return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        errors: [],
+    });
+});
 
 export { app }
