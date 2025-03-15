@@ -1,21 +1,18 @@
-import axios from "axios";
+import { apiHandler } from "../utils/apiHandler";
+import api from "./api";
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+// Register User
+export const registerUser = (formData: FormData) =>
+    apiHandler(() =>
+        api.post("/api/v1/users/register", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        }).then(res => res.data)
+    );
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "multipart/form-data",
-  },
-});
+// Login User
+export const loginUser = (data: { email: string; password: string }) =>
+    apiHandler(() =>
+        api.post("/api/v1/users/login", data).then(res => res.data)
+    );
 
-export const registerUser = async (formData: FormData) => {
-  try {
-    const response = await api.post("/api/v1/users/register", formData);
-    return response.data; 
-  } catch (error: any) {
-    throw error.response?.data || "Something went wrong";
-  }
-};
-
-export default api;
+export default { registerUser, loginUser };
